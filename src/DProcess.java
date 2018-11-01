@@ -1,10 +1,7 @@
 import java.net.*;
 import java.io.*;
+import java.util.Objects;
 
-enum MessageID
-{
-    HELLO, HI;
-}
 
 public class DProcess
 {
@@ -12,11 +9,13 @@ public class DProcess
     private int maxpid;
     private ObjectOutputStream[] oos = new ObjectOutputStream[10];
     private ObjectInputStream[] ois = new ObjectInputStream[10];
+    private DMutex dmutex;
     public DProcess(int id, int maxpid)
     {
         this.pid = id;
         this.maxpid = maxpid;
-        System.out.printf("process with id: %d created\n", pid);
+        //System.out.printf("process with id: %d created\n", pid);
+        dmutex = new DMutex(this, maxpid);
     }
 
     public int GetPid()
@@ -35,7 +34,7 @@ public class DProcess
                 int lport = 50000 + pid;
                 try {
                     ServerSocket server = new ServerSocket(lport);
-                    System.out.println("Server started for process "+ pid);
+                    //System.out.println("Server started for process "+ pid);
                     while(true) {
                         Socket socket = server.accept();
                         new Thread() {
@@ -63,14 +62,19 @@ public class DProcess
             // read the hello packet first
             try {
                 MsgWrapper msg = (MsgWrapper) in.readObject();
-                System.out.println("received packet");
+                //System.out.println("received packet");
                 if (msg.msgid == MessageID.HELLO) {
                     HelloPacket hello = (HelloPacket) msg.msg;
-                    System.out.println("Hello packet received from " + hello.pid + "in process "+ this.pid);
+                    //System.out.println("Hello packet received from " + hello.pid + "in process "+ this.pid);
                     //this.oos[hello.pid] = out;
-                } else if (msg.msgid == MessageID.HI) {
-                    HiPacket hi = (HiPacket) msg.msg;
-                    System.out.println("Hi packet received from " + hi.pid + " message: " + hi.message + " in process "+ this.pid);
+                } else if (msg.msgid == MessageID.REQUEST) {
+                    REQUEST req = (REQUEST) msg.msg;
+                    System.out.println("request message received from "+req.pid+" in process "+this.pid+" seq no "+req.seqno);
+                    dmutex.HandleRequestCs(req.pid, req.seqno);
+                } else if (msg.msgid == MessageID.TOKEN) {
+                    TOKEN tkn = (TOKEN) msg.msg;
+                    System.out.println("token received from "+tkn.frompid);
+                    dmutex.HandleToken(tkn.frompid);
                 }
 
             } catch (Exception e) {
@@ -85,7 +89,7 @@ public class DProcess
             public void run() {
                 try {
                     Socket socket = new Socket("127.0.0.1", 50000+tpid);
-                    System.out.println("process "+ pid + " connected to pid "+tpid);
+                    //System.out.println("process "+ pid + " connected to pid "+tpid);
                     ObjectOutputStream os = new ObjectOutputStream(socket.getOutputStream());
                     ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
                     HelloPacket pkt = new HelloPacket();
@@ -108,7 +112,7 @@ public class DProcess
             if (os != null) {
                 try {
                     os.writeObject(msg);
-                    System.out.println("wrote to "+os);
+                    //System.out.println("wrote to "+os);
                 } catch (IOException e) {
                     System.out.println(e);
                 }
@@ -116,18 +120,19 @@ public class DProcess
         }
 
     }
-}
 
-class MsgWrapper implements Serializable {
-    public MessageID msgid;
-    public Object msg;
-}
+    public void SendMsg(MsgWrapper msg, int to) throws IOException
+    {
+        oos[to].writeObject(msg);
+    }
 
-class HelloPacket implements Serializable {
-    int pid;
-}
+    public void RequestCs()
+    {
+        this.dmutex.RequestCs();
+    }
 
-class HiPacket implements Serializable {
-    int pid;
-    String message;
+    public void SetTokenOwner()
+    {
+        this.dmutex.SetTokenOwner();
+    }
 }

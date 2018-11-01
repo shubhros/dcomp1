@@ -22,7 +22,11 @@ public class Main {
 
         p[6].SetTokenOwner();
 
-        p[0].RequestCs();
+        for (;;) {
+            p[0].RequestCs();
+            p[0].ExecuteCriticalSection();
+            p[0].ReleaseCs();
+        }
 
 
     }

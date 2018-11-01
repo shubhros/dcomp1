@@ -24,7 +24,7 @@ public class DProcess
     }
 
     public void ExecuteCriticalSection() throws InterruptedException {
-        Thread.sleep(30000);
+        Thread.sleep(3000);
     }
 
     public void StartServer()
@@ -134,5 +134,10 @@ public class DProcess
     public void SetTokenOwner()
     {
         this.dmutex.SetTokenOwner();
+    }
+
+    public void ReleaseCs()
+    {
+        this.dmutex.ReleaseCs();
     }
 }

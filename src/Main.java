@@ -1,3 +1,5 @@
+import java.util.Random;
+
 public class Main {
     public static void main(String[] args) throws InterruptedException {
         int maxpid = 10;
@@ -22,12 +24,22 @@ public class Main {
 
         p[6].SetTokenOwner();
 
-        for (;;) {
-            p[0].RequestCs();
-            p[0].ExecuteCriticalSection();
-            p[0].ReleaseCs();
+        for (int i = 0; i < 1; i++) {
+            new Thread() {
+                Random r = new Random();
+                public void run() {
+                    for (int j = 0; j < 10; j++) {
+                        int v = r.nextInt(maxpid - 1);
+                        try {
+                            p[0].ExecuteCriticalSection();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                }
+            }.start();
+
         }
-
-
     }
 }

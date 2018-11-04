@@ -1,6 +1,7 @@
 import java.net.*;
 import java.io.*;
 import java.util.Objects;
+import java.util.concurrent.Semaphore;
 
 
 public class DProcess
@@ -10,12 +11,14 @@ public class DProcess
     private ObjectOutputStream[] oos = new ObjectOutputStream[10];
     private ObjectInputStream[] ois = new ObjectInputStream[10];
     private DMutex dmutex;
+    private Semaphore oosLock;
     public DProcess(int id, int maxpid)
     {
         this.pid = id;
         this.maxpid = maxpid;
         //System.out.printf("process with id: %d created\n", pid);
         dmutex = new DMutex(this, maxpid);
+        this.oosLock = new Semaphore(1, true);
     }
 
     public int GetPid()
@@ -24,7 +27,9 @@ public class DProcess
     }
 
     public void ExecuteCriticalSection() throws InterruptedException {
+        dmutex.RequestCs();
         Thread.sleep(3000);
+        dmutex.ReleaseCs();
     }
 
     public void StartServer()
@@ -44,14 +49,14 @@ public class DProcess
                                     ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
                                     handleConnection(in, out);
                                 } catch (Exception e) {
-                                    System.out.println(e);
+                                    e.printStackTrace();
                                 }
                             }
                         }.start();
 
                     }
                 } catch(IOException e) {
-                    System.out.println(e);
+                    e.printStackTrace();
                 }
             }
         }.start();
@@ -69,16 +74,16 @@ public class DProcess
                     //this.oos[hello.pid] = out;
                 } else if (msg.msgid == MessageID.REQUEST) {
                     REQUEST req = (REQUEST) msg.msg;
-                    System.out.println("request message received from "+req.pid+" in process "+this.pid+" seq no "+req.seqno);
+                    //System.out.println("request message received from "+req.pid+" in process "+this.pid+" seq no "+req.seqno);
                     dmutex.HandleRequestCs(req.pid, req.seqno);
                 } else if (msg.msgid == MessageID.TOKEN) {
                     TOKEN tkn = (TOKEN) msg.msg;
-                    System.out.println("token received from "+tkn.frompid);
+                   // System.out.println("token received from "+tkn.frompid+ " in "+ GetPid());
                     dmutex.HandleToken(tkn.frompid);
                 }
 
             } catch (Exception e) {
-                System.out.println(e);
+                e.printStackTrace();
             }
         }
     }
@@ -100,7 +105,7 @@ public class DProcess
                     os.writeObject(msg);
                     oos[tpid] = os;
                 } catch(IOException e) {
-                    System.out.println(e);
+                    e.printStackTrace();
                 }
 
             }
@@ -111,10 +116,12 @@ public class DProcess
         for(ObjectOutputStream os: this.oos) {
             if (os != null) {
                 try {
+                    oosLock.acquireUninterruptibly();
                     os.writeObject(msg);
+                    oosLock.release();
                     //System.out.println("wrote to "+os);
-                } catch (IOException e) {
-                    System.out.println(e);
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
         }
@@ -123,12 +130,9 @@ public class DProcess
 
     public void SendMsg(MsgWrapper msg, int to) throws IOException
     {
+        oosLock.acquireUninterruptibly();
         oos[to].writeObject(msg);
-    }
-
-    public void RequestCs()
-    {
-        this.dmutex.RequestCs();
+        oosLock.release();
     }
 
     public void SetTokenOwner()
@@ -136,8 +140,4 @@ public class DProcess
         this.dmutex.SetTokenOwner();
     }
 
-    public void ReleaseCs()
-    {
-        this.dmutex.ReleaseCs();
-    }
 }

@@ -2,7 +2,7 @@ import java.util.Random;
 
 public class Main {
     public static void main(String[] args) throws InterruptedException {
-        int maxpid = 15;
+        int maxpid = 5;
         DProcess p[] = new DProcess[maxpid];
         DMutex d[] = new DMutex[maxpid];
         for (int i = 0; i < maxpid; i++) {
@@ -32,15 +32,22 @@ public class Main {
             new Thread() {
                 Random r = new Random();
                 public void run() {
-                    for (int j = 0; j < maxpid; j++) {
+                    for (;;) {
+                        try {
+                            p[2].ExecuteCriticalSection();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    /*for (int j = 0; j < maxpid; j++) {
                         int v = r.nextInt(maxpid - 1);
                         try {
                             p[v].ExecuteCriticalSection();
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
-                    }
-                    System.out.println("End loop");
+                    }*/
+                   // System.out.println("End loop");
 
                 }
             }.start();

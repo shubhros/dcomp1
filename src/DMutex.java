@@ -38,7 +38,7 @@ public class DMutex {
     public void RequestCs() {
         System.out.println("Requesting critical section" + entity.GetPid());
         this.tokenLock.acquireUninterruptibly();
-        if (!tokenAvailable) {
+        if (!tokenAvailable || (tokenAvailable && locked)) {
             this.tokenLock.release();
 
             // update rn
@@ -90,7 +90,7 @@ public class DMutex {
                     Integer[] req = new Integer[2];
                     req[0] = i;
                     req[1] = rn[i];
-                    System.out.println("release cs have a pending request from"+ req[0]);
+                    System.out.println("release cs have a pending request from"+ req[0] + " " + "in "+ entity.GetPid());
 
                     token.tokenQueue.add(req);
                 }
@@ -146,7 +146,7 @@ public class DMutex {
     }
 
     public void HandleRequestCs(int frompid, int seqno) {
-        //System.out.println("handle request cs called for pid "+ frompid+" from pid "+ entity.GetPid());
+        System.out.println("handle request cs called for pid "+ frompid+" from pid "+ entity.GetPid());
         this.nlock.acquireUninterruptibly();
 
         if (seqno > rn[frompid]) {
@@ -173,7 +173,7 @@ public class DMutex {
             msg.msg = tkn;
             msg.msgid = MessageID.TOKEN;
 
-            //System.out.println("responding with token for pid"+ frompid+ "from pid"+ this.entity.GetPid()+ " "+ token);
+            System.out.println("responding with token for pid"+ frompid+ "from pid"+ this.entity.GetPid()+ " "+ token);
 
             try {
                 entity.SendMsg(msg, frompid);

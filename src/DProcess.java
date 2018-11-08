@@ -9,7 +9,6 @@ public class DProcess
     private int pid;
     private int maxpid;
     private ObjectOutputStream[] oos;
-    //private ObjectInputStream[] ois; = new ObjectInputStream[maxpid];
     private DMutex dmutex;
     private Semaphore oosLock;
     public DProcess(int id, int maxpid)

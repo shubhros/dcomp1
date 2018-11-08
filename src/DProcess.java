@@ -8,8 +8,8 @@ public class DProcess
 {
     private int pid;
     private int maxpid;
-    private ObjectOutputStream[] oos = new ObjectOutputStream[10];
-    private ObjectInputStream[] ois = new ObjectInputStream[10];
+    private ObjectOutputStream[] oos;
+    //private ObjectInputStream[] ois; = new ObjectInputStream[maxpid];
     private DMutex dmutex;
     private Semaphore oosLock;
     public DProcess(int id, int maxpid)
@@ -17,6 +17,7 @@ public class DProcess
         this.pid = id;
         this.maxpid = maxpid;
         //System.out.printf("process with id: %d created\n", pid);
+        oos = new ObjectOutputStream[maxpid];
         dmutex = new DMutex(this, maxpid);
         this.oosLock = new Semaphore(1, true);
     }

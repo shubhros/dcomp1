@@ -141,12 +141,12 @@ public class DMutex {
 
         this.tokenLock.release();
         // wake up request cs from here
-        System.out.println("token received from " + frompid + "in process"+ this.entity.GetPid());
+        //System.out.println("token received from " + frompid + "in process"+ this.entity.GetPid());
         this.sem.release();
     }
 
     public void HandleRequestCs(int frompid, int seqno) {
-        System.out.println("handle request cs called for pid "+ frompid+" from pid "+ entity.GetPid());
+        //System.out.println("handle request cs called for pid "+ frompid+" from pid "+ entity.GetPid());
         this.nlock.acquireUninterruptibly();
 
         if (seqno > rn[frompid]) {
@@ -173,7 +173,7 @@ public class DMutex {
             msg.msg = tkn;
             msg.msgid = MessageID.TOKEN;
 
-            System.out.println("responding with token for pid"+ frompid+ "from pid"+ this.entity.GetPid()+ " "+ token);
+            //System.out.println("responding with token for pid"+ frompid+ "from pid"+ this.entity.GetPid()+ " "+ token);
 
             try {
                 entity.SendMsg(msg, frompid);

@@ -22,20 +22,25 @@ public class Main {
         }
         Thread.sleep(1000);
 
-        p[6].SetTokenOwner();
+        p[0].SetTokenOwner();
 
-        for (int i = 0; i < 1; i++) {
+
+
+
+        for (int i = 0; i < 4; i++) {
+          //  p[i].ExecuteCriticalSection();
             new Thread() {
                 Random r = new Random();
                 public void run() {
-                    for (int j = 0; j < 10; j++) {
+                    for (int j = 0; j < maxpid; j++) {
                         int v = r.nextInt(maxpid - 1);
                         try {
-                            p[0].ExecuteCriticalSection();
+                            p[v].ExecuteCriticalSection();
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
                     }
+                    System.out.println("End loop");
 
                 }
             }.start();

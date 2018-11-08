@@ -28,7 +28,7 @@ public class DProcess
 
     public void ExecuteCriticalSection() throws InterruptedException {
         dmutex.RequestCs();
-        Thread.sleep(3000);
+        Thread.sleep(1000);
         dmutex.ReleaseCs();
     }
 
@@ -77,9 +77,9 @@ public class DProcess
                     //System.out.println("request message received from "+req.pid+" in process "+this.pid+" seq no "+req.seqno);
                     dmutex.HandleRequestCs(req.pid, req.seqno);
                 } else if (msg.msgid == MessageID.TOKEN) {
-                    TOKEN tkn = (TOKEN) msg.msg;
+                    TOKENMSG tkn = (TOKENMSG) msg.msg;
                    // System.out.println("token received from "+tkn.frompid+ " in "+ GetPid());
-                    dmutex.HandleToken(tkn.frompid);
+                    dmutex.HandleToken(tkn.frompid, tkn.token);
                 }
 
             } catch (Exception e) {

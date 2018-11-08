@@ -28,7 +28,8 @@ class REQUEST implements Serializable
     int seqno;
 }
 
-class TOKEN implements Serializable
+class TOKENMSG implements Serializable
 {
     int frompid;
+    Token token;
 }
